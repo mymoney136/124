@@ -54,8 +54,7 @@
         import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
 
-        // ===================================================
-        // Your web app's Firebase configuration
+        // Your web app's Firebase configuration - ALREADY FILLED IN
         const firebaseConfig = {
           apiKey: "AIzaSyCAkTramEw9xQsKDJafmKPTRaoQMyxl_88",
           authDomain: "my-money-site-177b1.firebaseapp.com",
@@ -64,7 +63,6 @@
           messagingSenderId: "1001673216101",
           appId: "1:1001673216101:web:1135329ea119260a89b68c"
         };
-        // ===================================================
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
