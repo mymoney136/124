@@ -10,11 +10,12 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// מה קורה כשהתראה מגיעה כשהמסך נעול
 messaging.onBackgroundMessage((payload) => {
-    const notificationTitle = payload.notification.title || "משימה חדשה מראלי מטו\"ס 🔔";
+    const notificationTitle = payload.notification.title;
     const notificationOptions = {
-        body: payload.notification.body || "המורה פרסם משימה חדשה, היכנס לבדוק!",
-        icon: 'https://cdn-icons-png.flaticon.com/512/3119/3119338.png'
+        body: payload.notification.body,
+        icon: '/icon.png' // שים כאן לוגו של האפליקציה שלך
     };
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
