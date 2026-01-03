@@ -10,11 +10,10 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// האזנה להתראות כשהאפליקציה סגורה
 messaging.onBackgroundMessage((payload) => {
-    const notificationTitle = payload.notification.title || "משימה חדשה!";
+    const notificationTitle = payload.notification.title || "משימה חדשה מראלי מטו\"ס 🔔";
     const notificationOptions = {
-        body: payload.notification.body,
+        body: payload.notification.body || "המורה פרסם משימה חדשה, היכנס לבדוק!",
         icon: 'https://cdn-icons-png.flaticon.com/512/3119/3119338.png'
     };
     self.registration.showNotification(notificationTitle, notificationOptions);
