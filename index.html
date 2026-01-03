@@ -45,7 +45,6 @@ input:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.2);
 width: 100%; padding: 20px; border-radius: 20px; border: none; background: white;
 color: #1e3a8a; font-weight: 900; font-size: 19px; cursor: pointer; transition: 0.3s;
 }
-.btn-main:active { transform: scale(0.96); }
 
 .schedule-btn-ui {
 background: rgba(255,255,255,0.15); border: 1px solid var(--glass-border);
@@ -56,7 +55,7 @@ animation: pulse 2s infinite; text-align: center;
 .task-card {
 background: rgba(255, 255, 255, 0.15); border: 1px solid var(--glass-border);
 border-radius: 25px; padding: 22px; margin-bottom: 20px; position: relative;
-animation: fadeInUp 0.6s ease-out backwards; transition: 0.3s;
+animation: fadeInUp 0.6s ease-out backwards;
 }
 
 .ws-controls { position: absolute; top: 18px; left: 18px; display: flex; gap: 8px; z-index: 10; }
@@ -67,13 +66,12 @@ width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: cent
 
 .task-title { font-size: 24px; font-weight: 800; margin-bottom: 5px; }
 .task-date { font-size: 13px; color: #a7f3d0; margin-bottom: 15px; display: block; font-weight: 600; }
-.task-img { width: 100%; border-radius: 20px; margin-bottom: 15px; cursor: zoom-in; }
+.task-img { width: 100%; border-radius: 20px; margin-bottom: 15px; cursor: zoom-in; max-height: 250px; object-fit: cover; }
 
 .status-btn {
 padding: 16px; border-radius: 20px; background: rgba(255, 255, 255, 0.08);
 text-align: center; font-weight: 800; cursor: pointer; border: 1px solid var(--glass-border); transition: 0.3s;
 }
-.status-btn:hover { background: var(--accent); }
 
 #notifBanner { 
 background: var(--accent); color: white; padding: 12px; text-align: center; border-radius: 20px; margin-bottom: 20px; font-weight: bold; animation: fadeInUp 0.5s ease;
@@ -86,12 +84,6 @@ background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(20px); padding: 30px 1
 .modal-content { width: 100%; max-width: 450px; margin: 0 auto; animation: scaleIn 0.4s ease-out; }
 
 .day-box { background: rgba(255, 255, 255, 0.07); border-radius: 22px; padding: 18px; margin-bottom: 12px; border-right: 6px solid white; }
-.day-box.sun { border-color: var(--sun-color); }
-.day-box.mon { border-color: var(--mon-color); }
-.day-box.tue { border-color: var(--tue-color); }
-.day-box.wed { border-color: var(--wed-color); }
-.day-box.thu { border-color: var(--thu-color); }
-
 .hidden { display: none; }
 </style>
 </head>
@@ -106,7 +98,7 @@ background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(20px); padding: 30px 1
     </div>
 
     <div id="taskArea" class="hidden">
-        <div id="notifBanner" class="hidden">🔔 משימה חדשה פורסמה הרגע!</div>
+        <div id="notifBanner" class="hidden">🔔 משימה חדשה פורסמה!</div>
 
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <div id="helloName" style="font-size: 28px; font-weight: 900;"></div>
@@ -126,23 +118,23 @@ background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(20px); padding: 30px 1
 </div>
 
 <div id="scheduleModal" class="modal" onclick="this.style.display='none'">
-<div class="modal-content" onclick="event.stopPropagation();">
-<h2 style="text-align:center; margin-bottom:25px;">📅 מערכת שעות</h2>
-<div id="scheduleContainer"></div>
-<button class="btn-main" style="margin-top:20px; font-size:16px;" onclick="document.getElementById('scheduleModal').style.display='none'">סגור</button>
-</div>
+    <div class="modal-content" onclick="event.stopPropagation();">
+        <h2 style="text-align:center; margin-bottom:25px;">📅 מערכת שעות</h2>
+        <div id="scheduleContainer"></div>
+        <button class="btn-main" style="margin-top:20px; font-size:16px;" onclick="document.getElementById('scheduleModal').style.display='none'">סגור</button>
+    </div>
 </div>
 
 <div id="wsViewModal" class="modal" onclick="this.style.display='none'">
-<div class="modal-content" onclick="event.stopPropagation();">
-<h3 style="text-align:center;">📄 דפי עבודה</h3>
-<div id="wsGrid" style="display:grid; gap:15px;"></div>
-<button class="btn-main" style="margin-top:20px;" onclick="document.getElementById('wsViewModal').style.display='none'">סגור</button>
-</div>
+    <div class="modal-content" onclick="event.stopPropagation();">
+        <h3 style="text-align:center;">📄 דפי עבודה שהעלית</h3>
+        <div id="wsGrid" style="display:grid; gap:15px;"></div>
+        <button class="btn-main" style="margin-top:20px;" onclick="document.getElementById('wsViewModal').style.display='none'">סגור</button>
+    </div>
 </div>
 
 <div id="imgModal" class="modal" onclick="this.style.display='none'">
-<div class="modal-content"><img id="modalImg" src="" style="width:100%; border-radius:30px;"></div>
+    <div class="modal-content"><img id="modalImg" src="" style="width:100%; border-radius:30px;"></div>
 </div>
 
 <script type="module">
@@ -150,12 +142,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, query, where, onSnapshot, doc, getDocs, updateDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyDvnS8L9r2LMKcUD78Ix7bldVp9qzbYwtk",
-authDomain: "tast-7808e.firebaseapp.com",
-projectId: "tast-7808e",
-storageBucket: "tast-7808e.firebasestorage.app",
-messagingSenderId: "99024860024",
-appId: "1:99024860024:web:24ab70c10254a2014fce8d"
+    apiKey: "AIzaSyDvnS8L9r2LMKcUD78Ix7bldVp9qzbYwtk",
+    authDomain: "tast-7808e.firebaseapp.com",
+    projectId: "tast-7808e",
+    storageBucket: "tast-7808e.firebasestorage.app",
+    messagingSenderId: "99024860024",
+    appId: "1:99024860024:web:24ab70c10254a2014fce8d"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -163,132 +155,119 @@ const db = getFirestore(app);
 let student = "", classCode = "", currentSchedule = {};
 
 window.enterClass = async () => {
-student = document.getElementById('studentName').value.trim();
-classCode = document.getElementById('classCode').value.trim().toUpperCase();
-if(!student || !classCode) return;
+    student = document.getElementById('studentName').value.trim();
+    classCode = document.getElementById('classCode').value.trim().toUpperCase();
+    if(!student || !classCode) return;
 
-const snap = await getDocs(query(collection(db, "classes"), where("code", "==", classCode)));
-if(snap.empty) return alert("קוד כיתה שגוי");
+    // בקשת הרשאה להתראות
+    if ("Notification" in window) {
+        await Notification.requestPermission();
+    }
 
-currentSchedule = snap.docs[0].data().schedule || {};
-localStorage.setItem('studentName', student);
-localStorage.setItem('classCode', classCode);
+    const snap = await getDocs(query(collection(db, "classes"), where("code", "==", classCode)));
+    if(snap.empty) return alert("קוד כיתה שגוי");
 
-document.getElementById('loginArea').classList.add('hidden');
-document.getElementById('taskArea').classList.remove('hidden');
-document.getElementById('helloName').innerText = "היי " + student;
+    currentSchedule = snap.docs[0].data().schedule || {};
+    localStorage.setItem('studentName', student);
+    localStorage.setItem('classCode', classCode);
 
-listenNotifications(); // הפעלת התראות
-updateActivity();
-loadTasks();
+    document.getElementById('loginArea').classList.add('hidden');
+    document.getElementById('taskArea').classList.remove('hidden');
+    document.getElementById('helloName').innerText = "היי " + student;
+
+    listenNotifications();
+    updateActivity();
+    loadTasks();
 };
 
 function listenNotifications() {
-const q = query(collection(db, "notifications"), where("classCode", "==", classCode));
-onSnapshot(q, (snapshot) => {
-    snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-            const data = change.doc.data();
-            const now = Date.now();
-            const timestamp = data.timestamp?.toMillis() || 0;
-            // הצגת באנר רק אם ההתראה נוצרה ב-30 השניות האחרונות
-            if (now - timestamp < 30000) {
-                const banner = document.getElementById('notifBanner');
-                banner.classList.remove('hidden');
-                setTimeout(() => banner.classList.add('hidden'), 8000);
+    onSnapshot(query(collection(db, "notifications"), where("classCode", "==", classCode)), (snap) => {
+        snap.docChanges().forEach(change => {
+            if (change.type === "added") {
+                const data = change.doc.data();
+                if (Date.now() - (data.timestamp?.toMillis() || 0) < 30000) {
+                    // באנר פנימי
+                    const b = document.getElementById('notifBanner');
+                    b.classList.remove('hidden');
+                    setTimeout(() => b.classList.add('hidden'), 10000);
+                    
+                    // התראת מערכת
+                    if (Notification.permission === "granted") {
+                        new Notification("משימה חדשה בראלי מטו\"ס!", { body: data.title });
+                    }
+                }
             }
-        }
+        });
     });
-});
-}
-
-function updateActivity() {
-setDoc(doc(db, "activity", student + "_" + classCode), { name: student, classCode: classCode, lastSeen: serverTimestamp() }, { merge: true });
 }
 
 function loadTasks() {
-onSnapshot(query(collection(db, "tasks"), where("classCode", "==", classCode)), (tSnap) => {
-onSnapshot(query(collection(db, "submissions"), where("studentName", "==", student)), (sSnap) => {
-const done = {}; sSnap.forEach(d => { if(d.data().completed) done[d.data().taskId] = true; });
-const act = document.getElementById('activeTasks'), arc = document.getElementById('archivedTasks');
-act.innerHTML = ''; arc.innerHTML = '';
+    onSnapshot(query(collection(db, "tasks"), where("classCode", "==", classCode)), (tSnap) => {
+        onSnapshot(query(collection(db, "submissions"), where("studentName", "==", student)), (sSnap) => {
+            const done = {}; sSnap.forEach(d => { if(d.data().completed) done[d.data().taskId] = true; });
+            const act = document.getElementById('activeTasks'), arc = document.getElementById('archivedTasks');
+            act.innerHTML = ''; arc.innerHTML = '';
 
-let tasks = []; tSnap.forEach(d => tasks.push({id: d.id, ...d.data()}));
-tasks.sort((a,b) => a.endTime - b.endTime);
+            let tasks = []; tSnap.forEach(d => tasks.push({id: d.id, ...d.data()}));
+            tasks.sort((a,b) => a.endTime - b.endTime);
 
-tasks.forEach((t, index) => {
-const delay = index * 0.12;
-if(done[t.id]) {
-arc.innerHTML += `<div class="task-card" style="padding:15px; text-align:center; animation-delay:${delay}s">
-<div style="font-weight:bold; margin-bottom:5px;">${t.title}</div>
-<div style="color:var(--accent); cursor:pointer; font-size:12px;" onclick="toggleTask('${t.id}', true)">החזר למשימות</div>
-</div>`;
-} else {
-const hasWS = t.worksheets && t.worksheets.length > 0;
-act.innerHTML += `<div class="task-card" style="animation-delay: ${delay}s">
-<div class="ws-controls">
-<div class="ws-btn" onclick="triggerUpload('${t.id}')">📄+</div>
-${hasWS ? `<div class="ws-btn" onclick="viewWS('${t.id}')">👁️</div>` : ''}
-${hasWS && t.worksheetBy === student ? `<div class="ws-btn" style="color:var(--danger)" onclick="deleteWS('${t.id}')">🗑️</div>` : ''}
-</div>
-<div class="task-title">${t.title}</div>
-<div class="task-date">🕒 להגשה עד: ${new Date(t.endTime).toLocaleString('he-IL')}</div>
-${t.imageUrl ? `<img src="${t.imageUrl}" class="task-img" onclick="zoom('${t.imageUrl}')">` : ''}
-<div class="status-btn" onclick="toggleTask('${t.id}', false )">⬜  סמן שסיימתי</div>
-</div>`;
-}
-});
-document.getElementById('archiveWrapper').classList.toggle('hidden', arc.innerHTML === '');
-});
-});
+            tasks.forEach((t, i) => {
+                const hasWS = t.worksheets && t.worksheets.length > 0;
+                const html = `<div class="task-card" style="animation-delay: ${i*0.1}s">
+                    <div class="ws-controls">
+                        <div class="ws-btn" onclick="triggerUpload('${t.id}')">📄+</div>
+                        ${hasWS ? `<div class="ws-btn" onclick="viewWS('${t.id}')">👁️</div>` : ''}
+                        ${hasWS && t.worksheetBy === student ? `<div class="ws-btn" style="color:var(--danger)" onclick="deleteWS('${t.id}')">🗑️</div>` : ''}
+                    </div>
+                    <div class="task-title">${t.title}</div>
+                    <div class="task-date">🕒 להגשה עד: ${new Date(t.endTime).toLocaleString('he-IL')}</div>
+                    ${t.imageUrl ? `<img src="${t.imageUrl}" class="task-img" onclick="zoom('${t.imageUrl}')">` : ''}
+                    <div class="status-btn" onclick="toggleTask('${t.id}', ${done[t.id]||false})">${done[t.id] ? '✅ הושלם - החזר' : '⬜ סמן שסיימתי'}</div>
+                </div>`;
+                if(done[t.id]) arc.innerHTML += html; else act.innerHTML += html;
+            });
+            document.getElementById('archiveWrapper').classList.toggle('hidden', arc.innerHTML === '');
+        });
+    });
 }
 
 window.showSchedule = () => {
-const container = document.getElementById('scheduleContainer');
-const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי"];
-const colors = ["sun", "mon", "tue", "wed", "thu"];
-container.innerHTML = days.map((day, i) => {
-const lessons = currentSchedule[`day${i}`] || [];
-return `<div class="day-box ${colors[i]}"><strong>יום ${day}</strong>
-${lessons.map(l => `<div style="display:flex; justify-content:space-between; font-size:14px; margin-top:5px;"><span>${l.subject}</span><span>${l.time}</span></div>`).join('')}
-</div>`;
-}).join('');
-document.getElementById('scheduleModal').style.display = 'block';
+    const container = document.getElementById('scheduleContainer');
+    const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי"];
+    container.innerHTML = days.map((day, i) => {
+        const lessons = currentSchedule[`day${i}`] || [];
+        return `<div class="day-box" style="border-color:var(--sun-color)"><strong>יום ${day}</strong>
+        ${lessons.map(l => `<div style="display:flex; justify-content:space-between; margin-top:5px;"><span>${l.subject}</span><span>${l.time}</span></div>`).join('')}
+        </div>`;
+    }).join('');
+    document.getElementById('scheduleModal').style.display = 'block';
 };
 
 window.triggerUpload = (id) => {
-const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true;
-inp.onchange = async (e) => {
-const files = Array.from(e.target.files);
-const b64 = await Promise.all(files.map(f => new Promise(res => { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.readAsDataURL(f); })));
-await updateDoc(doc(db, "tasks", id), { worksheets: b64, worksheetBy: student });
-alert("הדפים הועלו!");
-};
-inp.click();
+    const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true;
+    inp.onchange = async (e) => {
+        const files = Array.from(e.target.files);
+        const b64 = await Promise.all(files.map(f => new Promise(res => { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.readAsDataURL(f); })));
+        await updateDoc(doc(db, "tasks", id), { worksheets: b64, worksheetBy: student });
+        alert("הועלה!");
+    };
+    inp.click();
 };
 
 window.viewWS = async (id) => {
-const d = await getDocs(collection(db, "tasks"));
-const t = d.docs.find(doc => doc.id === id).data();
-document.getElementById('wsGrid').innerHTML = t.worksheets.map(img => `<img src="${img}" style="width:100%; border-radius:15px;">`).join('');
-document.getElementById('wsViewModal').style.display = 'block';
+    const d = await getDocs(collection(db, "tasks"));
+    const t = d.docs.find(doc => doc.id === id).data();
+    document.getElementById('wsGrid').innerHTML = t.worksheets.map(img => `<img src="${img}" style="width:100%; border-radius:15px;">`).join('');
+    document.getElementById('wsViewModal').style.display = 'block';
 };
 
-window.deleteWS = async (id) => { if(confirm("למחוק דפים שלך?")) await updateDoc(doc(db, "tasks", id), { worksheets: null, worksheetBy: null }); };
-window.toggleTask = async (tid, isDone) => { await setDoc(doc(db, "submissions", student + "_" + tid), { studentName: student, taskId: tid, completed: !isDone, classCode: classCode }); };
+window.deleteWS = async (id) => { if(confirm("למחוק?")) await updateDoc(doc(db, "tasks", id), { worksheets: null, worksheetBy: null }); };
+window.toggleTask = async (tid, isDone) => { await setDoc(doc(db, "submissions", student + "_" + tid), { studentName: student, taskId: tid, completed: !isDone, classCode }); };
 window.zoom = (url) => { document.getElementById('modalImg').src = url; document.getElementById('imgModal').style.display = 'block'; };
-
+window.updateActivity = () => { setDoc(doc(db, "activity", student + "_" + classCode), { name: student, classCode, lastSeen: serverTimestamp() }, { merge: true }); };
 window.logout = () => { localStorage.clear(); location.reload(); };
 
-window.onload = () => {
-const n = localStorage.getItem('studentName');
-const c = localStorage.getItem('classCode');
-if(n && c) {
-document.getElementById('studentName').value = n;
-document.getElementById('classCode').value = c;
-enterClass();
-}
-};
+window.onload = () => { if(localStorage.getItem('studentName')) enterClass(); };
 </script>
 </body>
 </html>
