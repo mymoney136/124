@@ -1,29 +1,21 @@
-// הוסף את זה בתחילת ה-Script
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-// פונקציה לרישום השומר (Service Worker) וקבלת הרשאה
-async function setupNotifications() {
-    if ('serviceWorker' in navigator) {
-        try {
-            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-            console.log('Service Worker רשום בהצלחה');
+firebase.initializeApp({
+    apiKey: "AIzaSyDvnS8L9r2LMKcUD78Ix7bldVp9qzbYwtk",
+    projectId: "tast-7808e",
+    messagingSenderId: "99024860024",
+    appId: "1:99024860024:web:24ab70c10254a2014fce8d"
+});
 
-            const messaging = getMessaging();
-            // בקשת הרשאה וקבלת Token (מזהה מכשיר)
-            const currentToken = await getToken(messaging, { 
-                serviceWorkerRegistration: registration,
-                vapidKey: 'YOUR_PUBLIC_VAPID_KEY' // יש להוציא מהגדרות Cloud Messaging ב-Firebase
-            });
+const messaging = firebase.messaging();
 
-            if (currentToken) {
-                // שמירת ה-Token ב-Database תחת התלמיד כדי שהמורה יוכל לשלוח לו
-                console.log("Token התקבל:", currentToken);
-                // כאן תוסיף קוד ששומר את ה-Token ב-Firestore
-            }
-        } catch (err) {
-            console.error('שגיאה בהגדרת התראות:', err);
-        }
-    }
-}
-
-// קרא לפונקציה הזו ברגע שהתלמיד מתחבר לכיתה
+// האזנה להתראות כשהאפליקציה סגורה
+messaging.onBackgroundMessage((payload) => {
+    const notificationTitle = payload.notification.title || "משימה חדשה!";
+    const notificationOptions = {
+        body: payload.notification.body,
+        icon: 'https://cdn-icons-png.flaticon.com/512/3119/3119338.png'
+    };
+    self.registration.showNotification(notificationTitle, notificationOptions);
+});
