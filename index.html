@@ -66,15 +66,14 @@ padding: 16px; border-radius: 20px; background: rgba(255, 255, 255, 0.08);
 text-align: center; font-weight: 800; cursor: pointer; border: 1px solid var(--glass-border); transition: 0.3s;
 }
 
-#notifBanner { 
-background: var(--accent); color: white; padding: 15px; text-align: center; border-radius: 20px; 
-margin-bottom: 20px; font-weight: bold; animation: fadeInUp 0.5s ease; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-}
-
 .modal { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(20px); padding: 30px 15px; overflow-y: auto; }
 .modal-content { width: 100%; max-width: 450px; margin: 0 auto; }
-
 .hidden { display: none; }
+
+#notifBanner {
+background: var(--accent); color: white; padding: 15px; text-align: center; border-radius: 20px;
+margin-bottom: 20px; font-weight: bold; animation: fadeInUp 0.5s ease; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
 </style>
 </head>
 <body>
@@ -107,36 +106,80 @@ margin-bottom: 20px; font-weight: bold; animation: fadeInUp 0.5s ease; box-shado
     </div>
 </div>
 
-<div id="scheduleModal" class="modal" onclick="this.style.display='none'"><div class="modal-content" onclick="event.stopPropagation();"><h2 style="text-align:center; margin-bottom:25px;">📅 מערכת שעות</h2><div id="scheduleContainer"></div><button class="btn-main" style="margin-top:20px;" onclick="document.getElementById('scheduleModal').style.display='none'">סגור</button></div></div>
-<div id="wsViewModal" class="modal" onclick="this.style.display='none'"><div class="modal-content" onclick="event.stopPropagation();"><h3 style="text-align:center;">📄 דפי עבודה</h3><div id="wsGrid" style="display:grid; gap:15px;"></div><button class="btn-main" style="margin-top:20px;" onclick="document.getElementById('wsViewModal').style.display='none'">סגור</button></div></div>
-<div id="imgModal" class="modal" onclick="this.style.display='none'"><div class="modal-content"><img id="modalImg" src="" style="width:100%; border-radius:30px;"></div></div>
+<div id="scheduleModal" class="modal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation();">
+        <h2 style="text-align:center; margin-bottom:25px;">📅 מערכת שעות</h2>
+        <div id="scheduleContainer"></div>
+        <button class="btn-main" style="margin-top:20px;" onclick="document.getElementById('scheduleModal').style.display='none'">סגור</button>
+    </div>
+</div>
+
+<div id="wsViewModal" class="modal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation();">
+        <h3 style="text-align:center;">📄 דפי עבודה</h3>
+        <div id="wsGrid" style="display:grid; gap:15px;"></div>
+        <button class="btn-main" style="margin-top:20px;" onclick="document.getElementById('wsViewModal').style.display='none'">סגור</button>
+    </div>
+</div>
+
+<div id="imgModal" class="modal" onclick="this.style.display='none'">
+    <div class="modal-content"><img id="modalImg" src="" style="width:100%; border-radius:30px;"></div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, query, where, onSnapshot, doc, getDocs, updateDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
-const firebaseConfig = { 
-    apiKey: "AIzaSyDvnS8L9r2LMKcUD78Ix7bldVp9qzbYwtk", 
-    authDomain: "tast-7808e.firebaseapp.com", 
-    projectId: "tast-7808e", 
-    storageBucket: "tast-7808e.firebasestorage.app", 
-    messagingSenderId: "99024860024", 
-    appId: "1:99024860024:web:24ab70c10254a2014fce8d" 
+const firebaseConfig = {
+    apiKey: "AIzaSyDvnS8L9r2LMKcUD78Ix7bldVp9qzbYwtk",
+    authDomain: "tast-7808e.firebaseapp.com",
+    projectId: "tast-7808e",
+    storageBucket: "tast-7808e.firebasestorage.app",
+    messagingSenderId: "99024860024",
+    appId: "1:99024860024:web:24ab70c10254a2014fce8d"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const messaging = getMessaging(app);
+
 let student = "", classCode = "", currentSchedule = {};
-let isFirstLoad = true; // משתנה למניעת התראות ישנות בטעינה ראשונה
+
+// הגדרת Push Notifications
+async function setupPushNotifications() {
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            const currentToken = await getToken(messaging, {
+                serviceWorkerRegistration: registration,
+                vapidKey: 'BEeNvvBJuGHdg1EGiLBrNewD9mABeiOGRxUiODuSniyQ9HF7gYx8_gRA54UCgErZ2u6Nv-j04pfx4gcroN__BvY'
+            });
+
+            if (currentToken) {
+                await setDoc(doc(db, "device_tokens", student + "_" + classCode), {
+                    token: currentToken,
+                    studentName: student,
+                    classCode: classCode,
+                    lastUpdated: serverTimestamp()
+                }, { merge: true });
+            }
+        } catch (err) { console.error('Push Error:', err); }
+    }
+}
+
+// הודעה כשהאפליקציה פתוחה
+onMessage(messaging, (payload) => {
+    const banner = document.getElementById('notifBanner');
+    banner.innerText = "🔔 " + (payload.notification.title || "משימה חדשה!");
+    banner.classList.remove('hidden');
+    setTimeout(() => banner.classList.add('hidden'), 8000);
+});
 
 window.enterClass = async () => {
     student = document.getElementById('studentName').value.trim();
     classCode = document.getElementById('classCode').value.trim().toUpperCase();
     if(!student || !classCode) return alert("מלא פרטים");
-
-    if ("Notification" in window) {
-        await Notification.requestPermission();
-    }
 
     const snap = await getDocs(query(collection(db, "classes"), where("code", "==", classCode)));
     if(snap.empty) return alert("קוד כיתה שגוי");
@@ -149,41 +192,11 @@ window.enterClass = async () => {
     document.getElementById('taskArea').classList.remove('hidden');
     document.getElementById('helloName').innerText = "היי " + student;
 
-    listenNotifications();
+    setupPushNotifications();
     updateActivity();
     loadTasks();
+    setInterval(updateActivity, 120000);
 };
-
-function listenNotifications() {
-    const q = query(collection(db, "notifications"), where("classCode", "==", classCode));
-    onSnapshot(q, (snapshot) => {
-        if (isFirstLoad) {
-            isFirstLoad = false; // מתעלם מהמסמכים הקיימים כבר ב-DB ברגע הפתיחה
-            return;
-        }
-
-        snapshot.docChanges().forEach((change) => {
-            if (change.type === "added") {
-                const data = change.doc.data();
-                
-                // הצגת באנר
-                const banner = document.getElementById('notifBanner');
-                banner.classList.remove('hidden');
-                setTimeout(() => banner.classList.add('hidden'), 10000);
-                
-                // שליחת התראה חיצונית
-                if (Notification.permission === "granted") {
-                    try {
-                        new Notification("ראלי מטו\"ס 🔔", {
-                            body: data.title || "המורה פרסם משימה חדשה!",
-                            icon: "https://cdn-icons-png.flaticon.com/512/3119/3119338.png"
-                        });
-                    } catch (e) { console.error("Notification error:", e); }
-                }
-            }
-        });
-    });
-}
 
 function loadTasks() {
     onSnapshot(query(collection(db, "tasks"), where("classCode", "==", classCode)), (tSnap) => {
@@ -191,23 +204,27 @@ function loadTasks() {
             const done = {}; sSnap.forEach(d => { if(d.data().completed) done[d.data().taskId] = true; });
             const act = document.getElementById('activeTasks'), arc = document.getElementById('archivedTasks');
             act.innerHTML = ''; arc.innerHTML = '';
+            
             let tasks = []; tSnap.forEach(d => tasks.push({id: d.id, ...d.data()}));
             tasks.sort((a,b) => a.endTime - b.endTime);
 
             tasks.forEach((t, i) => {
                 const isDone = done[t.id] || false;
                 const hasWS = t.worksheets && t.worksheets.length > 0;
-                const html = `<div class="task-card" style="animation-delay: ${i*0.1}s">
-                    <div class="ws-controls">
-                        <div class="ws-btn" onclick="triggerUpload('${t.id}')">📄+</div>
-                        ${hasWS ? `<div class="ws-btn" onclick="viewWS('${t.id}')">👁️</div>` : ''}
-                        ${hasWS && t.worksheetBy === student ? `<div class="ws-btn" style="color:var(--danger)" onclick="deleteWS('${t.id}')">🗑️</div>` : ''}
-                    </div>
-                    <div class="task-title">${t.title}</div>
-                    <div class="task-date">🕒 להגשה עד: ${new Date(t.endTime).toLocaleString('he-IL')}</div>
-                    ${t.imageUrl ? `<img src="${t.imageUrl}" class="task-img" onclick="zoom('${t.imageUrl}')">` : ''}
-                    <div class="status-btn" onclick="toggleTask('${t.id}', ${isDone})">${isDone ? '✅ הושלם - החזר' : '⬜ סמן שסיימתי'}</div>
-                </div>`;
+                const html = `
+                    <div class="task-card" style="animation-delay: ${i*0.1}s">
+                        <div class="ws-controls">
+                            <div class="ws-btn" onclick="triggerUpload('${t.id}')">📄+</div>
+                            ${hasWS ? `<div class="ws-btn" onclick="viewWS('${t.id}')">👁️</div>` : ''}
+                            ${hasWS && t.worksheetBy === student ? `<div class="ws-btn" style="color:var(--danger)" onclick="deleteWS('${t.id}')">🗑️</div>` : ''}
+                        </div>
+                        <div class="task-title">${t.title}</div>
+                        <div class="task-date">🕒 להגשה עד: ${new Date(t.endTime).toLocaleString('he-IL')}</div>
+                        ${t.imageUrl ? `<img src="${t.imageUrl}" class="task-img" onclick="zoom('${t.imageUrl}')">` : ''}
+                        <div class="status-btn" style="${isDone?'background:var(--accent); color:white':''}" onclick="toggleTask('${t.id}', ${isDone})">
+                            ${isDone ? '✅ הושלם - לחץ לביטול' : '⬜ סמן שסיימתי'}
+                        </div>
+                    </div>`;
                 if(isDone) arc.innerHTML += html; else act.innerHTML += html;
             });
             document.getElementById('archiveWrapper').classList.toggle('hidden', arc.innerHTML === '');
@@ -220,8 +237,12 @@ window.showSchedule = () => {
     const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי"];
     container.innerHTML = days.map((day, i) => {
         const lessons = currentSchedule[`day${i}`] || [];
-        return `<div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:15px; margin-bottom:10px;"><strong>יום ${day}</strong>
-        ${lessons.map(l => `<div style="display:flex; justify-content:space-between; font-size:14px; margin-top:5px;"><span>${l.subject}</span><span>${l.time}</span></div>`).join('')}</div>`;
+        const colors = ['--sun-color','--mon-color','--tue-color','--wed-color','--thu-color'];
+        return `
+            <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:20px; margin-bottom:12px; border-right: 5px solid var(${colors[i]})">
+                <strong style="color:var(${colors[i]})">יום ${day}</strong>
+                ${lessons.length ? lessons.map(l => `<div style="display:flex; justify-content:space-between; font-size:14px; margin-top:6px; opacity:0.9;"><span>${l.subject}</span><span>${l.time}</span></div>`).join('') : '<div style="font-size:12px; opacity:0.5;">אין שיעורים</div>'}
+            </div>`;
     }).join('');
     document.getElementById('scheduleModal').style.display = 'block';
 };
@@ -232,7 +253,7 @@ window.triggerUpload = (id) => {
         const files = Array.from(e.target.files);
         const b64 = await Promise.all(files.map(f => new Promise(res => { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.readAsDataURL(f); })));
         await updateDoc(doc(db, "tasks", id), { worksheets: b64, worksheetBy: student });
-        alert("הועלה!");
+        alert("דף עבודה הועלה בהצלחה!");
     };
     inp.click();
 };
@@ -240,19 +261,18 @@ window.triggerUpload = (id) => {
 window.viewWS = async (id) => {
     const d = await getDocs(collection(db, "tasks"));
     const t = d.docs.find(doc => doc.id === id).data();
-    document.getElementById('wsGrid').innerHTML = t.worksheets.map(img => `<img src="${img}" style="width:100%; border-radius:15px;">`).join('');
+    document.getElementById('wsGrid').innerHTML = t.worksheets.map(img => `<img src="${img}" style="width:100%; border-radius:20px; box-shadow:0 10px 20px rgba(0,0,0,0.2);">`).join('');
     document.getElementById('wsViewModal').style.display = 'block';
 };
 
-window.deleteWS = async (id) => { if(confirm("למחוק?")) await updateDoc(doc(db, "tasks", id), { worksheets: null, worksheetBy: null }); };
+window.deleteWS = async (id) => { if(confirm("למחוק את דף העבודה שהעלית?")) await updateDoc(doc(db, "tasks", id), { worksheets: null, worksheetBy: null }); };
 window.toggleTask = async (tid, isDone) => { await setDoc(doc(db, "submissions", student + "_" + tid), { studentName: student, taskId: tid, completed: !isDone, classCode }); };
 window.zoom = (url) => { document.getElementById('modalImg').src = url; document.getElementById('imgModal').style.display = 'block'; };
 window.updateActivity = () => { setDoc(doc(db, "activity", student + "_" + classCode), { name: student, classCode, lastSeen: serverTimestamp() }, { merge: true }); };
 window.logout = () => { localStorage.clear(); location.reload(); };
 
 window.onload = () => {
-    const n = localStorage.getItem('studentName');
-    const c = localStorage.getItem('classCode');
+    const n = localStorage.getItem('studentName'), c = localStorage.getItem('classCode');
     if(n && c) {
         document.getElementById('studentName').value = n;
         document.getElementById('classCode').value = c;
