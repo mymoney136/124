@@ -107,8 +107,8 @@ margin-bottom: 20px; font-weight: bold; animation: fadeInUp 0.5s ease; box-shado
     </div>
 </div>
 
-<div id="scheduleModal" class="modal" onclick="this.style.display='none'"><div class="modal-content" onclick="event.stopPropagation();"><h2 style="text-align:center; margin-bottom:25px;">📅 מערכת שעות</h2><div id="scheduleContainer"></div></div></div>
-<div id="wsViewModal" class="modal" onclick="this.style.display='none'"><div class="modal-content" onclick="event.stopPropagation();"><h3 style="text-align:center;">📄 דפי עבודה</h3><div id="wsGrid" style="display:grid; gap:15px;"></div></div></div>
+<div id="scheduleModal" class="modal" onclick="this.style.display='none'"><div class="modal-content" onclick="event.stopPropagation();"><h2 style="text-align:center; margin-bottom:25px;">📅 מערכת שעות</h2><div id="scheduleContainer"></div><button class="btn-main" style="margin-top:20px;" onclick="document.getElementById('scheduleModal').style.display='none'">סגור</button></div></div>
+<div id="wsViewModal" class="modal" onclick="this.style.display='none'"><div class="modal-content" onclick="event.stopPropagation();"><h3 style="text-align:center;">📄 דפי עבודה</h3><div id="wsGrid" style="display:grid; gap:15px;"></div><button class="btn-main" style="margin-top:20px;" onclick="document.getElementById('wsViewModal').style.display='none'">סגור</button></div></div>
 <div id="imgModal" class="modal" onclick="this.style.display='none'"><div class="modal-content"><img id="modalImg" src="" style="width:100%; border-radius:30px;"></div></div>
 
 <script type="module">
@@ -127,13 +127,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 let student = "", classCode = "", currentSchedule = {};
+let isFirstLoad = true; // משתנה למניעת התראות ישנות בטעינה ראשונה
 
 window.enterClass = async () => {
     student = document.getElementById('studentName').value.trim();
     classCode = document.getElementById('classCode').value.trim().toUpperCase();
     if(!student || !classCode) return alert("מלא פרטים");
 
-    // בקשת הרשאה חובה להתראות
     if ("Notification" in window) {
         await Notification.requestPermission();
     }
@@ -157,26 +157,28 @@ window.enterClass = async () => {
 function listenNotifications() {
     const q = query(collection(db, "notifications"), where("classCode", "==", classCode));
     onSnapshot(q, (snapshot) => {
+        if (isFirstLoad) {
+            isFirstLoad = false; // מתעלם מהמסמכים הקיימים כבר ב-DB ברגע הפתיחה
+            return;
+        }
+
         snapshot.docChanges().forEach((change) => {
             if (change.type === "added") {
                 const data = change.doc.data();
-                const now = Date.now();
-                const timestamp = data.timestamp ? data.timestamp.toMillis() : now;
                 
-                // בדיקה אם ההתראה נוצרה בדקה האחרונה
-                if (now - timestamp < 60000) {
-                    // באנר פנימי
-                    const banner = document.getElementById('notifBanner');
-                    banner.classList.remove('hidden');
-                    setTimeout(() => banner.classList.add('hidden'), 10000);
-                    
-                    // התראת מערכת
-                    if (Notification.permission === "granted") {
+                // הצגת באנר
+                const banner = document.getElementById('notifBanner');
+                banner.classList.remove('hidden');
+                setTimeout(() => banner.classList.add('hidden'), 10000);
+                
+                // שליחת התראה חיצונית
+                if (Notification.permission === "granted") {
+                    try {
                         new Notification("ראלי מטו\"ס 🔔", {
                             body: data.title || "המורה פרסם משימה חדשה!",
                             icon: "https://cdn-icons-png.flaticon.com/512/3119/3119338.png"
                         });
-                    }
+                    } catch (e) { console.error("Notification error:", e); }
                 }
             }
         });
