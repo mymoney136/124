@@ -75,7 +75,9 @@ text-align: center; font-weight: 800; cursor: pointer; border: 1px solid var(--g
 }
 .status-btn:hover { background: var(--accent); }
 
-#notifBanner { background: var(--accent); color: white; padding: 12px; text-align: center; border-radius: 20px; margin-bottom: 20px; font-weight: bold; animation: fadeInUp 0.5s ease; }
+#notifBanner { 
+background: var(--accent); color: white; padding: 12px; text-align: center; border-radius: 20px; margin-bottom: 20px; font-weight: bold; animation: fadeInUp 0.5s ease;
+}
 
 .modal {
 display: none; position: fixed; inset: 0; z-index: 2000;
@@ -104,7 +106,8 @@ background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(20px); padding: 30px 1
     </div>
 
     <div id="taskArea" class="hidden">
-        <div id="notifBanner" class="hidden">🔔 משימה חדשה פורסמה מהמורה!</div>
+        <div id="notifBanner" class="hidden">🔔 משימה חדשה פורסמה הרגע!</div>
+
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <div id="helloName" style="font-size: 28px; font-weight: 900;"></div>
             <div style="text-align:left;">
@@ -175,7 +178,7 @@ document.getElementById('loginArea').classList.add('hidden');
 document.getElementById('taskArea').classList.remove('hidden');
 document.getElementById('helloName').innerText = "היי " + student;
 
-listenNotifications();
+listenNotifications(); // הפעלת התראות
 updateActivity();
 loadTasks();
 };
@@ -186,9 +189,13 @@ onSnapshot(q, (snapshot) => {
     snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
             const data = change.doc.data();
-            if (Date.now() - (data.timestamp?.toMillis() || 0) < 15000) {
-                document.getElementById('notifBanner').classList.remove('hidden');
-                setTimeout(() => document.getElementById('notifBanner').classList.add('hidden'), 10000);
+            const now = Date.now();
+            const timestamp = data.timestamp?.toMillis() || 0;
+            // הצגת באנר רק אם ההתראה נוצרה ב-30 השניות האחרונות
+            if (now - timestamp < 30000) {
+                const banner = document.getElementById('notifBanner');
+                banner.classList.remove('hidden');
+                setTimeout(() => banner.classList.add('hidden'), 8000);
             }
         }
     });
@@ -271,10 +278,7 @@ window.deleteWS = async (id) => { if(confirm("למחוק דפים שלך?")) awa
 window.toggleTask = async (tid, isDone) => { await setDoc(doc(db, "submissions", student + "_" + tid), { studentName: student, taskId: tid, completed: !isDone, classCode: classCode }); };
 window.zoom = (url) => { document.getElementById('modalImg').src = url; document.getElementById('imgModal').style.display = 'block'; };
 
-window.logout = () => {
-localStorage.clear();
-location.reload();
-};
+window.logout = () => { localStorage.clear(); location.reload(); };
 
 window.onload = () => {
 const n = localStorage.getItem('studentName');
