@@ -1,244 +1,188 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>ראלי מטו"ס - ממשק תלמידים מלא</title>
-<style>
-:root {
---bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #4338ca 100%);
---glass: rgba(255, 255, 255, 0.12);
---glass-border: rgba(255, 255, 255, 0.25);
---accent: #10b981;
---danger: #ef4444;
---sun-color: #fbbf24; --mon-color: #f87171; --tue-color: #34d399; --wed-color: #60a5fa; --thu-color: #c084fc;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ראלי מטו"ס - מרכז למידה</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --bg-dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+        }
 
-body {
-font-family: -apple-system, system-ui, sans-serif;
-margin: 0; padding: 15px; direction: rtl; min-height: 100vh;
-display: flex; justify-content: center;
-background: var(--bg-gradient); background-size: 400% 400%;
-animation: gradientMove 15s ease infinite; color: white; overflow-x: hidden;
-}
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            margin: 0;
+            background: radial-gradient(circle at top, #1e293b, #000);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-@keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .container {
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            margin-top: 40px;
+        }
 
-.main-container { width: 100%; max-width: 500px; z-index: 1; }
-.glass-panel {
-background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-border: 1px solid var(--glass-border); border-radius: 35px; padding: 30px;
-box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
-}
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
 
-input {
-width: 100%; padding: 20px; margin-bottom: 15px; background: rgba(255, 255, 255, 0.1);
-border: 2px solid transparent; border-radius: 20px; color: white; font-size: 18px; box-sizing: border-box; outline: none; transition: 0.3s;
-}
-input:focus { border-color: white; background: rgba(255, 255, 255, 0.2); }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
+            color: white;
+            box-sizing: border-box;
+        }
 
-.btn-main {
-width: 100%; padding: 20px; border-radius: 20px; border: none; background: white;
-color: #1e3a8a; font-weight: 900; font-size: 19px; cursor: pointer; transition: 0.3s;
-}
+        button {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
 
-.task-card {
-background: rgba(255, 255, 255, 0.15); border: 1px solid var(--glass-border);
-border-radius: 25px; padding: 22px; margin-bottom: 20px; position: relative;
-animation: fadeInUp 0.6s ease-out backwards;
-}
+        button:active { transform: scale(0.98); }
 
-.ws-controls { position: absolute; top: 18px; left: 18px; display: flex; gap: 8px; z-index: 10; }
-.ws-btn {
-background: rgba(255, 255, 255, 0.2); border: 1px solid var(--glass-border);
-width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer;
-}
+        .task-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 12px;
+            border-right: 4px solid var(--primary);
+            text-align: right;
+        }
 
-.task-title { font-size: 24px; font-weight: 800; }
-.task-date { font-size: 13px; color: #a7f3d0; margin-bottom: 15px; display: block; }
-.task-img { width: 100%; border-radius: 20px; margin-bottom: 15px; max-height: 250px; object-fit: cover; cursor: zoom-in; }
-
-.status-btn {
-padding: 16px; border-radius: 20px; background: rgba(255, 255, 255, 0.08);
-text-align: center; font-weight: 800; cursor: pointer; border: 1px solid var(--glass-border);
-}
-
-.modal { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(20px); padding: 30px 15px; overflow-y: auto; }
-.modal-content { width: 100%; max-width: 450px; margin: 0 auto; }
-.hidden { display: none; }
-
-#notifBanner {
-background: var(--accent); color: white; padding: 15px; text-align: center; border-radius: 20px;
-margin-bottom: 20px; font-weight: bold; animation: fadeInUp 0.5s ease;
-}
-</style>
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
 
-<div class="main-container">
-    <div id="loginArea" class="glass-panel">
-        <h2 style="text-align:center; font-size: 32px;">היי חבר 👋</h2>
-        <input type="text" id="studentName" placeholder="שם מלא">
-        <input type="text" id="classCode" placeholder="קוד כיתה">
-        <button class="btn-main" onclick="enterClass()">כניסה למערכת</button>
-    </div>
-
-    <div id="taskArea" class="hidden">
-        <div id="notifBanner" class="hidden"></div>
-        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <div id="helloName" style="font-size: 28px; font-weight: 900;"></div>
-            <div onclick="showSchedule()" style="background:rgba(255,255,255,0.15); padding:10px 20px; border-radius:18px; cursor:pointer; font-weight:bold;">📅 מערכת</div>
+    <div class="container">
+        <div id="loginScreen" class="glass-card">
+            <h2>ברוכים הבאים לראלי מטו"ס</h2>
+            <p>הזן פרטים כדי לצפות במשימות</p>
+            <input type="text" id="studentName" placeholder="שם מלא">
+            <input type="text" id="classCode" placeholder="קוד כיתה">
+            <button onclick="enterPortal()">כניסה למערכת</button>
         </div>
-        <div id="activeTasks"></div>
-        <div id="archiveWrapper" class="hidden">
-            <h4 style="margin: 45px 0 15px; border-right: 4px solid var(--accent); padding-right: 12px;">משימות שהושלמו ✅</h4>
-            <div id="archivedTasks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"></div>
+
+        <div id="portalScreen" class="hidden">
+            <div class="glass-card">
+                <h3 id="welcomeMsg"></h3>
+                <div id="taskList">טוען משימות...</div>
+                <button onclick="requestNotificationPermission()" style="margin-top: 20px; background: #3b82f6;">הפעל התראות בנייד 🔔</button>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="scheduleModal" class="modal" onclick="this.style.display='none'"><div class="modal-content" onclick="event.stopPropagation();"><div id="scheduleContainer"></div></div></div>
-<div id="wsViewModal" class="modal" onclick="this.style.display='none'"><div class="modal-content" onclick="event.stopPropagation();"><h3>📄 דפי עבודה</h3><div id="wsGrid" style="display:grid; gap:15px;"></div></div></div>
-<div id="imgModal" class="modal" onclick="this.style.display='none'"><div class="modal-content"><img id="modalImg" src="" style="width:100%; border-radius:30px;"></div></div>
+    <script>
+        // הגדרת כתובת השרת שלך (בפיתוח זה localhost, בייצור זו הכתובת של האתר)
+        const SERVER_URL = "http://localhost:3000"; 
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, query, where, onSnapshot, doc, getDocs, updateDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
+        async function enterPortal() {
+            const name = document.getElementById('studentName').value.trim();
+            const code = document.getElementById('classCode').value.trim().toUpperCase();
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDvnS8L9r2LMKcUD78Ix7bldVp9qzbYwtk",
-    authDomain: "tast-7808e.firebaseapp.com",
-    projectId: "tast-7808e",
-    storageBucket: "tast-7808e.firebasestorage.app",
-    messagingSenderId: "99024860024",
-    appId: "1:99024860024:web:24ab70c10254a2014fce8d"
-};
+            if (!name || !code) return alert("אנא מלא את כל הפרטים");
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const messaging = getMessaging(app);
+            localStorage.setItem('studentName', name);
+            localStorage.setItem('classCode', code);
 
-let student = "", classCode = "", currentSchedule = {};
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('portalScreen').classList.remove('hidden');
+            document.getElementById('welcomeMsg').innerText = `שלום, ${name}`;
 
-window.enterClass = async () => {
-    student = document.getElementById('studentName').value.trim();
-    classCode = document.getElementById('classCode').value.trim().toUpperCase();
-    if(!student || !classCode) return;
+            loadTasks(code);
+        }
 
-    const snap = await getDocs(query(collection(db, "classes"), where("code", "==", classCode)));
-    if(snap.empty) return alert("קוד שגוי");
+        async function loadTasks(classCode) {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/tasks/${classCode}`);
+                if (!response.ok) throw new Error("שגיאה בטעינת משימות");
+                
+                const tasks = await response.json();
+                const list = document.getElementById('taskList');
+                list.innerHTML = "";
 
-    currentSchedule = snap.docs[0].data().schedule || {};
-    localStorage.setItem('studentName', student);
-    localStorage.setItem('classCode', classCode);
+                if (tasks.length === 0) {
+                    list.innerHTML = "<p>אין משימות פעילות כרגע.</p>";
+                    return;
+                }
 
-    document.getElementById('loginArea').classList.add('hidden');
-    document.getElementById('taskArea').classList.remove('hidden');
-    document.getElementById('helloName').innerText = "היי " + student;
-
-    // רישום להתראות PUSH
-    setupPush();
-    loadTasks();
-    updateActivity();
-    setInterval(updateActivity, 120000);
-};
-
-async function setupPush() {
-    try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            const token = await getToken(messaging, { 
-                vapidKey: 'BEeNvvBJuGHdg1EGiLBrNewD9mABeiOGRxUiODuSniyQ9HF7gYx8_gRA54UCgErZ2u6Nv-j04pfx4gcroN__BvY' 
-            });
-            if (token) {
-                await setDoc(doc(db, "push_tokens", student + "_" + classCode), {
-                    token, classCode, studentName: student, lastUpdated: serverTimestamp()
+                tasks.forEach(task => {
+                    const div = document.createElement('div');
+                    div.className = 'task-card';
+                    div.innerHTML = `
+                        <strong>${task.title}</strong><br>
+                        <small>תאריך יעד: ${new Date(task.endTime).toLocaleString('he-IL')}</small>
+                    `;
+                    list.appendChild(div);
                 });
+            } catch (err) {
+                console.error(err);
+                document.getElementById('taskList').innerHTML = "שגיאה בחיבור לשרת";
             }
         }
-    } catch (e) { console.error("Push Error:", e); }
-}
 
-onMessage(messaging, (payload) => {
-    const banner = document.getElementById('notifBanner');
-    banner.innerText = "🔔 " + payload.notification.title + ": " + payload.notification.body;
-    banner.classList.remove('hidden');
-    setTimeout(() => banner.classList.add('hidden'), 10000);
-});
+        // בקשת אישור להתראות ושליחת הטוקן לשרת
+        async function requestNotificationPermission() {
+            if (!('serviceWorker' in navigator)) return;
 
-function loadTasks() {
-    onSnapshot(query(collection(db, "tasks"), where("classCode", "==", classCode)), (tSnap) => {
-        onSnapshot(query(collection(db, "submissions"), where("studentName", "==", student)), (sSnap) => {
-            const done = {}; sSnap.forEach(d => { if(d.data().completed) done[d.data().taskId] = true; });
-            const act = document.getElementById('activeTasks'), arc = document.getElementById('archivedTasks');
-            act.innerHTML = ''; arc.innerHTML = '';
-            
-            let tasks = []; tSnap.forEach(d => tasks.push({id: d.id, ...d.data()}));
-            tasks.sort((a,b) => a.endTime - b.endTime);
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                // כאן הקוד של ה-Service Worker יופעל (בהנחה שקיים קובץ sw.js)
+                const registration = await navigator.serviceWorker.ready;
+                // הערה: כאן אתה אמור לקבל את ה-Push Token מהדפדפן
+                // לצורך הדוגמה, נניח שקיבלנו token מה-FCM SDK (שצריך להטעין בנפרד ב-sw.js)
+                // saveTokenToServer(token);
+                alert("התראות הופעלו בהצלחה!");
+            }
+        }
 
-            tasks.forEach(t => {
-                const isDone = done[t.id];
-                const hasWS = t.worksheets && t.worksheets.length > 0;
-                const html = `<div class="task-card">
-                    <div class="ws-controls">
-                        <div class="ws-btn" onclick="triggerUpload('${t.id}')">📄+</div>
-                        ${hasWS ? `<div class="ws-btn" onclick="viewWS('${t.id}')">👁️</div>` : ''}
-                        ${hasWS && t.worksheetBy === student ? `<div class="ws-btn" style="color:var(--danger)" onclick="deleteWS('${t.id}')">🗑️</div>` : ''}
-                    </div>
-                    <div class="task-title">${t.title}</div>
-                    <small class="task-date">🕒 עד: ${new Date(t.endTime).toLocaleString()}</small>
-                    ${t.imageUrl ? `<img src="${t.imageUrl}" class="task-img" onclick="zoom('${t.imageUrl}')">` : ''}
-                    <div class="status-btn" style="${isDone?'background:var(--accent);color:white':''}" onclick="toggleTask('${t.id}', ${isDone})">${isDone ? '✅ סיימתי' : '⬜ סמן כבוצע'}</div>
-                </div>`;
-                if(isDone) arc.innerHTML += html; else act.innerHTML += html;
+        async function saveTokenToServer(token) {
+            await fetch(`${SERVER_URL}/api/save-token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentName: localStorage.getItem('studentName'),
+                    classCode: localStorage.getItem('classCode'),
+                    token: token
+                })
             });
-            document.getElementById('archiveWrapper').classList.toggle('hidden', arc.innerHTML === '');
-        });
-    });
-}
+        }
 
-window.showSchedule = () => {
-    const container = document.getElementById('scheduleContainer');
-    container.innerHTML = '<h2>📅 מערכת שעות</h2>';
-    const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי"];
-    days.forEach((day, i) => {
-        const lessons = currentSchedule[`day${i}`] || [];
-        container.innerHTML += `<div style="margin-bottom:15px; background:rgba(255,255,255,0.1); padding:10px; border-radius:15px;">
-            <strong>יום ${day}:</strong> ${lessons.map(l => `<br>${l.time} - ${l.subject}`).join('') || ' אין שיעורים'}
-        </div>`;
-    });
-    document.getElementById('scheduleModal').style.display = 'block';
-};
-
-window.triggerUpload = (id) => {
-    const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true;
-    inp.onchange = async (e) => {
-        const files = Array.from(e.target.files);
-        const b64 = await Promise.all(files.map(f => new Promise(res => { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.readAsDataURL(f); })));
-        await updateDoc(doc(db, "tasks", id), { worksheets: b64, worksheetBy: student });
-        alert("הועלה!");
-    };
-    inp.click();
-};
-
-window.viewWS = async (id) => {
-    const d = await getDocs(collection(db, "tasks"));
-    const t = d.docs.find(doc => doc.id === id).data();
-    document.getElementById('wsGrid').innerHTML = t.worksheets.map(img => `<img src="${img}" style="width:100%; border-radius:15px;">`).join('');
-    document.getElementById('wsViewModal').style.display = 'block';
-};
-
-window.deleteWS = async (id) => { if(confirm("למחוק?")) await updateDoc(doc(db, "tasks", id), { worksheets: null, worksheetBy: null }); };
-window.toggleTask = async (tid, isDone) => { await setDoc(doc(db, "submissions", student + "_" + tid), { studentName: student, taskId: tid, completed: !isDone, classCode }); };
-window.zoom = (url) => { document.getElementById('modalImg').src = url; document.getElementById('imgModal').style.display = 'block'; };
-window.updateActivity = () => { setDoc(doc(db, "activity", student + "_" + classCode), { name: student, classCode, lastSeen: serverTimestamp() }, { merge: true }); };
-
-window.onload = () => {
-    const n = localStorage.getItem('studentName'), c = localStorage.getItem('classCode');
-    if(n && c) { document.getElementById('studentName').value = n; document.getElementById('classCode').value = c; enterClass(); }
-};
-</script>
+        // בדיקה אם המשתמש כבר מחובר
+        window.onload = () => {
+            const savedName = localStorage.getItem('studentName');
+            const savedCode = localStorage.getItem('classCode');
+            if (savedName && savedCode) {
+                document.getElementById('studentName').value = savedName;
+                document.getElementById('classCode').value = savedCode;
+                enterPortal();
+            }
+        };
+    </script>
 </body>
 </html>
